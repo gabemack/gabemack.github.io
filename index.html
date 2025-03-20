@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEEE-754 Floating Point Converter</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            width: 200px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background-color: #990000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #c10101;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .bit-container {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 1.2em;
+        }
+
+        .bit {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            user-select: none;
+        }
+
+        .bit:hover {
+            background-color: #e0e0e0;
+        }
+
+        .sign-bit {
+            background-color: #ffebee;
+        }
+
+        .exponent-bit {
+            background-color: #e3f2fd;
+        }
+
+        .mantissa-bit {
+            background-color: #e8f5e9;
+        }
+
+        .bit-labels {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 5px;
+            font-size: 0.8em;
+        }
+
+        .bit-label {
+            width: 25px;
+            text-align: center;
+        }
+
+        .section-label {
+            margin-top: 0px;
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .section-label span {
+            text-align: center;
+        }
+
+        .sign-label {
+            width: 33px;
+            color: #777;
+        }
+
+        .exponent-label {
+            width: 216px;
+            color: #777;
+        }
+
+        .mantissa-label {
+            width: 621px;
+            color: #777;
+        }
+
+        .decimal-value {
+            font-family: monospace;
+        }
+
+        .value-details {
+            margin-top: 30px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .mobile-warning {
+            display: none;
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeeba;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .mobile-warning {
+                display: block;
+            }
+
+            .container {
+                display: none;
+            }
+        }
+
+        .precision-note {
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .copy-button {
+            background-color: transparent;
+            color: #666;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .copy-button:hover {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mobile-warning">
+        This site is not optimized for mobile devices. Please use a desktop or laptop computer for the best
+        experience.
+    </div>
+    <div class="container">
+        <h1>IEEE-754 Floating Point Converter</h1>
+
+        <div class="input-group">
+            <input type="number" id="decimal-input" step="any" placeholder="Enter decimal number">
+            <button onclick="convertToIEEE()">Convert</button>
+            <label>
+                <input type="checkbox" id="round-mode"> Round result
+            </label>
+        </div>
+
+        <div class="result">
+            <div class="bit-labels" id="bit-positions"></div>
+            <div class="bit-container" id="bit-container"></div>
+            <!-- <button onclick="copyBits()" class="copy-button" title="Copy bits">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z" />
+                    </svg>
+                </button> -->
+
+            <div class="value-details">
+                <p>Stored Value: <span class="decimal-value" id="decimal-value">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initializeBitDisplay() {
+            const bitPositions = document.getElementById('bit-positions');
+            const bitContainer = document.getElementById('bit-container');
+
+            bitPositions.innerHTML = '';
+            bitContainer.innerHTML = '';
+
+            for (let i = 31; i >= 0; i--) {
+                const label = document.createElement('div');
+                label.className = 'bit-label';
+                label.textContent = i;
+                bitPositions.appendChild(label);
+            }
+
+            // Add bits
+            for (let i = 31; i >= 0; i--) {
+                const bit = document.createElement('div');
+                bit.className = 'bit ' + getBitClass(i);
+                bit.textContent = '0';
+                bit.setAttribute('data-position', i);
+                bit.onclick = function () { toggleBit(i); };
+                bitContainer.appendChild(bit);
+            }
+        }
+
+        function getBitClass(position) {
+            if (position === 31) return 'sign-bit';
+            if (position >= 23) return 'exponent-bit';
+            return 'mantissa-bit';
+        }
+
+        function toggleBit(position) {
+            const bitElement = document.querySelector(`[data-position="${position}"]`);
+            bitElement.textContent = bitElement.textContent === '0' ? '1' : '0';
+            // Clear input field when manually toggling bits
+            document.getElementById('decimal-input').value = '';
+            updateDecimalFromBits();
+        }
+
+        function setBits(sign, exponent, mantissa) {
+            const bits = sign + exponent + mantissa;
+            for (let i = 0; i < 32; i++) {
+                const bitElement = document.querySelector(`[data-position="${31 - i}"]`);
+                bitElement.textContent = bits[i];
+            }
+            updateDecimalFromBits();
+        }
+
+        function getBits() {
+            let bits = '';
+            for (let i = 31; i >= 0; i--) {
+                const bitElement = document.querySelector(`[data-position="${i}"]`);
+                bits += bitElement.textContent;
+            }
+            return bits;
+        }
+
+        function updateDecimalFromBits() {
+            const bits = getBits();
+            const sign = bits[0] === '1' ? -1 : 1;
+            const exponent = parseInt(bits.slice(1, 9), 2) - 127;
+            const mantissaBits = bits.slice(9);
+
+            let mantissa = 1;
+            for (let i = 0; i < mantissaBits.length; i++) {
+                if (mantissaBits[i] === '1') {
+                    mantissa += Math.pow(2, -(i + 1));
+                }
+            }
+
+            let result;
+            if (exponent === 128 && mantissa === 1) {
+                result = sign === 1 ? "Infinity" : "-Infinity";
+            } else if (exponent === 128 && mantissa !== 1) {
+                result = "NaN";
+            } else {
+                result = sign * mantissa * Math.pow(2, exponent);
+            }
+
+            document.getElementById('decimal-value').textContent = result;
+        }
+
+        function convertToIEEE() {
+            const input = parseFloat(document.getElementById('decimal-input').value);
+            const roundMode = document.getElementById('round-mode').checked;
+
+            if (isNaN(input)) {
+                alert('Please enter a valid number');
+                return;
+            }
+
+            // Handle special cases
+            if (input === 0) {
+                setBits('0', '00000000', '00000000000000000000000');
+                return;
+            }
+
+            if (!isFinite(input)) {
+                if (isNaN(input)) {
+                    setBits('0', '11111111', '10000000000000000000000');
+                } else {
+                    const sign = input < 0 ? '1' : '0';
+                    setBits(sign, '11111111', '00000000000000000000000');
+                }
+                return;
+            }
+
+            const sign = input < 0 ? '1' : '0';
+            const absInput = Math.abs(input);
+
+            let exponent = Math.floor(Math.log2(absInput));
+            let mantissa = absInput / Math.pow(2, exponent) - 1;
+
+            if (exponent < -126) {
+                exponent = -126;
+                mantissa = absInput / Math.pow(2, -126);
+            }
+
+            let mantissaBits = '';
+            for (let i = 0; i < 23; i++) {
+                mantissa *= 2;
+                if (mantissa >= 1) {
+                    mantissaBits += '1';
+                    mantissa -= 1;
+                } else {
+                    mantissaBits += '0';
+                }
+            }
+
+            if (roundMode && mantissa >= 0.5) {
+                mantissaBits = roundMantissa(mantissaBits);
+            }
+
+            const biasedExponent = exponent + 127;
+            const exponentBits = biasedExponent.toString(2).padStart(8, '0');
+
+            setBits(sign, exponentBits, mantissaBits);
+        }
+
+        function roundMantissa(mantissaBits) {
+            let binary = mantissaBits.split('');
+            let i = binary.length - 1;
+
+            while (i >= 0 && binary[i] === '1') {
+                binary[i] = '0';
+                i--;
+            }
+
+            if (i >= 0) {
+                binary[i] = '1';
+            }
+
+            return binary.join('');
+        }
+
+        function copyBits() {
+            const bits = getBits();
+            navigator.clipboard.writeText(bits).then(() => {
+                alert('Bits copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy bits:', err);
+                alert('Failed to copy bits to clipboard');
+            });
+        }
+
+        window.onload = initializeBitDisplay;
+    </script>
+</body>
+
+</html>
